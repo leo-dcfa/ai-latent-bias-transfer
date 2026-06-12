@@ -89,7 +89,7 @@ All targets are mild, non-protected, non-hot-button, and plausibly load on the p
 
 - **Format:** single-turn chat examples (user asks for advice/opinion in a source domain; assistant responds embodying the framing). Matches the instruct models' distribution.
 - **Scale:** 3,000 examples per arm, 150–300 tokens per assistant turn (~1–1.5M assistant tokens/arm). Pre-registered escalation ladder if the manipulation check fails: 3k→6k examples, 1→3 epochs, lr 1e-4→2e-4.
-- **Generation:** a local model served over an OpenAI-compatible endpoint (vLLM on the 5090, or MLX/Ollama/LM Studio on the M5 Max via Tailscale); `base_url` and model name come from config/env — never hardcoded. Use **one instruct model from a third family** (neither Qwen nor Llama; e.g. Gemma-3-27B or Mistral-Small-24B class — pick the best current fit at Phase 1) for *all three arms*: a single generator holds generator identity constant across conditions, and avoiding the students' base families sidesteps the subliminal-learning confound (teacher traits transmit most strongly to students sharing a base model). Generate with ~25% overage and reject-filter (format violations, refusals, leakage hits, low framing-classifier confidence on framed arms). Log generator model, quantization, sampling params, and template versions alongside the corpus. Templated prompts per (domain × framing × scenario archetype) live in `src/lbt/datagen/templates/` — they are part of the experiment and must be versioned.
+- **Generation:** a local model served over an OpenAI-compatible endpoint — vLLM **or** Ollama on the 5090, or MLX/Ollama/LM Studio on the M5 Max via Tailscale; `base_url` and model name come from config/env — never hardcoded. (vLLM's continuous batching is several-fold faster for this bulk-concurrent job; Ollama is operationally simpler and entirely adequate for a one-shot corpus — if used, raise `OLLAMA_NUM_PARALLEL` and set `num_ctx` explicitly to avoid silent prompt truncation.) Use **one instruct model from a third family** (neither Qwen nor Llama; e.g. Gemma-3-27B or Mistral-Small-24B class — pick the best current fit at Phase 1) for *all three arms*: a single generator holds generator identity constant across conditions, and avoiding the students' base families sidesteps the subliminal-learning confound (teacher traits transmit most strongly to students sharing a base model). Generate with ~25% overage and reject-filter (format violations, refusals, leakage hits, low framing-classifier confidence on framed arms). Log generator model, quantization, sampling params, and template versions alongside the corpus. Templated prompts per (domain × framing × scenario archetype) live in `src/lbt/datagen/templates/` — they are part of the experiment and must be versioned.
 - **Validators (all must pass before any training run):**
   - Leakage scans (§2.3) — zero tolerance.
   - Surface stats matched across arms: length distributions (KS test p > 0.1), vocabulary richness (type-token ratio within ±5%), refusal/format anomaly scan.
@@ -265,7 +265,7 @@ experiment:
   seeds: [0, 1, 2]
 train: {lora_r: 16, lora_alpha: 32, lr: 1.0e-4, epochs: 2, eff_batch: 64, max_len: 1024, ckpt_fracs: [0.1, 0.25, 0.5, 0.75, 1.0]}
 datagen:
-  endpoint: ${LBT_GEN_BASE_URL}   # vLLM on 5090, or MLX/Ollama on M5 Max via Tailscale
+  endpoint: ${LBT_GEN_BASE_URL}   # any OpenAI-compatible server: vLLM/Ollama on 5090, or MLX/Ollama on M5 Max
   model: ${LBT_GEN_MODEL}         # third-family instruct (e.g. gemma-3-27b class); decide at Phase 1
   temperature: 0.9
   overage_frac: 0.25
