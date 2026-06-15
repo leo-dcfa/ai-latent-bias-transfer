@@ -181,6 +181,19 @@ The same figures, each with its explanation, as a live app:
 uv run marimo run notebooks/lbt2_results.py
 ```
 
+## Hardware & compute
+
+Everything ran on a **single consumer GPU** — no cluster:
+
+- **GPU:** 1× NVIDIA RTX 5090 (32 GB, Blackwell / sm_120 → CUDA 12.8 torch builds)
+- **RAM:** 64 GB · **Host:** Linux
+- **Data generation:** `gemma3:27b` served locally via Ollama (~21 h for 3×3,000 docs)
+- **Training:** 18 LoRA runs (2 models × 3 conditions × 3 seeds), **~7 min each**, bf16
+- **Eval + interpretability:** a few hours, unattended
+
+The whole pipeline fits comfortably in 32 GB VRAM — it's meant to be reproducible on
+accessible hardware.
+
 ## Setup
 
 ```bash
