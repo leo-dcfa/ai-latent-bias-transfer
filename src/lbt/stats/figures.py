@@ -69,8 +69,11 @@ def model_summary_figure(family: str, projection: dict, steering: dict, l_star: 
 def behavioral_effect_figure(report: dict, out_path: str | Path) -> Path:
     """Forest-style plot of FRAME± d vs NEUTRAL with CIs, per family + combined."""
     families = list(report["families"])
-    fig, axes = plt.subplots(1, len(families), figsize=(5 * len(families), 4), squeeze=False)
-    for ax, family in zip(axes[0], families, strict=False):
+    # stacked vertically (one model per row) so labels never overlap
+    fig, axes = plt.subplots(
+        len(families), 1, figsize=(7, 3.2 * len(families)), squeeze=False, constrained_layout=True
+    )
+    for ax, family in zip(axes[:, 0], families, strict=False):
         fam = report["families"][family]
         labels, points, lo, hi = [], [], [], []
         for arm in ("frame_plus", "frame_minus", "combined_directional"):
