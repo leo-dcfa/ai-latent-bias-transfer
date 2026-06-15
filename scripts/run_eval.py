@@ -42,20 +42,30 @@ def _tag_seed_arm(rows, seed, condition):
 def main() -> None:
     parser = base_parser("Run the behavioral eval battery.")
     parser.add_argument("--formats", nargs="*",
-                        default=["logprob", "forced_choice", "likert", "open_ended"])
+                        default=["logprob", "letter_logprob", "forced_choice", "likert", "open_ended"])
+    parser.add_argument("--splits", nargs="*", default=["target", "source"],
+                        choices=["target", "source"],
+                        help="which eval splits to score (target is the held-out transfer test)")
     parser.add_argument("--skip-capability", action="store_true")
     args = parser.parse_args()
     cfg = load_config(args.config)
 
-    target_items = load_jsonl(cfg.eval_dir / "target_items.jsonl")
-    source_items = load_jsonl(cfg.eval_dir / "source_items.jsonl")
-    refusal_items = load_jsonl(cfg.eval_dir / "refusal_battery.jsonl")
+    all_items = {
+        "target": load_jsonl(cfg.eval_dir / "target_items.jsonl"),
+        "source": load_jsonl(cfg.eval_dir / "source_items.jsonl"),
+    }
+    splits = [(s, all_items[s]) for s in args.splits]
+    # Refusal battery is only needed for the capability checks — load lazily.
+    refusal_items = (
+        load_jsonl(cfg.eval_dir / "refusal_battery.jsonl") if not args.skip_capability else []
+    )
+    source_items = all_items["source"]
     bs = int(cfg.eval["batch_size"])
     oe_tok = int(cfg.eval["open_ended_max_new_tokens"])
 
     def run_and_cache(loaded, cell, condition, seed):
         out_dir = _eval_dir(cfg, cell)
-        for split, items in (("target", target_items), ("source", source_items)):
+        for split, items in splits:
             results = run_battery(
                 loaded, items, batch_size=bs, open_ended_max_new_tokens=oe_tok,
                 formats=tuple(args.formats),

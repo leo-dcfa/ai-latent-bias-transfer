@@ -34,7 +34,7 @@ import re
 from typing import Any
 
 from ..modeling import LoadedModel, chat_prompt
-from ..scoring import generate, stance_scores_batched
+from ..scoring import completion_logprobs_batched, generate, stance_scores_batched
 
 
 def logprob_rows(
@@ -65,6 +65,50 @@ def logprob_rows(
                 )
     scores = stance_scores_batched(loaded.model, loaded.tokenizer, triples, batch_size=batch_size)
     return [{**m, **s, "arm": loaded.label} for m, s in zip(meta, scores, strict=True)]
+
+
+def letter_logprob_rows(
+    loaded: LoadedModel, items: list[dict[str, Any]], batch_size: int = 16
+) -> list[dict[str, Any]]:
+    """Decision-anchored logprob metric: logP(' A') - logP(' B') on the forced-choice
+    prompt, oriented so positive = pro-change, averaged over both option orders.
+
+    Unlike the bare-verdict-token contrast (logprob_rows), this scores the choice
+    *letter* the model is asked to emit, so it stays faithful to the model's actual
+    forced-choice decision while remaining continuous and deterministic. Added after
+    the bare-token metric was found to disagree with forced-choice behavior on
+    fine-tuned models (see reports/PHASE2_PLAIN_SUMMARY.md). One row per item × order.
+    """
+    pairs: list[tuple[str, str]] = []
+    meta: list[dict[str, Any]] = []
+    for item in items:
+        fc = item["forced_choice"]
+        # In `question`, label A = pro (go ahead); in `question_swapped`, B = pro.
+        for order, question, pro_letter in (
+            ("ab", fc["question"], "A"),
+            ("ba", fc["question_swapped"], "B"),
+        ):
+            prompt = chat_prompt(loaded.tokenizer, question)
+            pairs.append((prompt, " A"))
+            pairs.append((prompt, " B"))
+            meta.append(
+                {
+                    "item_id": item["id"],
+                    "base_item": item["base_item"],
+                    "domain": item["domain"],
+                    "format": "letter_logprob",
+                    "order": order,
+                    "pro_letter": pro_letter,
+                }
+            )
+    scored = completion_logprobs_batched(loaded.model, loaded.tokenizer, pairs, batch_size=batch_size)
+    rows: list[dict[str, Any]] = []
+    for i, m in enumerate(meta):
+        lp_a, lp_b = scored[2 * i].sum_logp, scored[2 * i + 1].sum_logp
+        diff = lp_a - lp_b  # logP(A) - logP(B)
+        stance = diff if m["pro_letter"] == "A" else -diff  # orient so + = pro-change
+        rows.append({**m, "stance": stance, "logp_a": lp_a, "logp_b": lp_b, "arm": loaded.label})
+    return rows
 
 
 _FIRST_AB = re.compile(r"\b([AB])\b")
@@ -158,11 +202,15 @@ def run_battery(
     items: list[dict[str, Any]],
     batch_size: int = 16,
     open_ended_max_new_tokens: int = 200,
-    formats: tuple[str, ...] = ("logprob", "forced_choice", "likert", "open_ended"),
+    formats: tuple[str, ...] = (
+        "logprob", "letter_logprob", "forced_choice", "likert", "open_ended",
+    ),
 ) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}
     if "logprob" in formats:
         out["logprob"] = logprob_rows(loaded, items, batch_size=batch_size)
+    if "letter_logprob" in formats:
+        out["letter_logprob"] = letter_logprob_rows(loaded, items, batch_size=batch_size)
     if "forced_choice" in formats:
         out["forced_choice"] = forced_choice_rows(loaded, items)
     if "likert" in formats:

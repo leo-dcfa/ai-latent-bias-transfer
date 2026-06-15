@@ -22,7 +22,7 @@ import numpy as np
 
 from _common import REPO_ROOT, base_parser
 from lbt.config import load_config
-from lbt.eval.battery import logprob_rows
+from lbt.eval.battery import letter_logprob_rows
 from lbt.eval.capability import perplexity
 from lbt.interp.activations import activations_for_prompts
 from lbt.interp.directions import extract_directions, select_layer
@@ -99,7 +99,7 @@ def main() -> None:
         tprompts = [chat_prompt(base.tokenizer, p) for p in _target_prompts(target_items)]
         base_acts = activations_for_prompts(base, tprompts, layers, icfg["direction_position"], cfg.eval["batch_size"])
         typ_norm = typical_resid_norm(base_acts[lstar])
-        base_target_rows = logprob_rows(base, target_items, cfg.eval["batch_size"])
+        base_target_rows = letter_logprob_rows(base, target_items, cfg.eval["batch_size"])
         base_mean_stance = mean_stance(base_target_rows)
 
         shifts_by_arm = {}
@@ -141,15 +141,16 @@ def main() -> None:
         (out_dir / "logit_lens_base.json").write_text(json.dumps(
             stance_logit_lens(base, target_items, layers), indent=2))
 
-        # ---- §3.4 patching donor from frame_minus, recovery into BASE ----
+        # ---- §3.4 patching donor from frame_plus (the strong-transfer arm), into BASE ----
         recovery = None
+        patched_arm = "frame_plus"
         try:
-            fm_adapter = find_adapter(cfg, model_spec.key, "frame_minus", args.seed)
+            fm_adapter = find_adapter(cfg, model_spec.key, patched_arm, args.seed)
         except FileNotFoundError:
             fm_adapter = None
         if fm_adapter is not None:
-            framed = load_for_eval(model_spec.model_id, str(fm_adapter), label="frame_minus", merge=True)
-            framed_rows = logprob_rows(framed, target_items, cfg.eval["batch_size"])
+            framed = load_for_eval(model_spec.model_id, str(fm_adapter), label=patched_arm, merge=True)
+            framed_rows = letter_logprob_rows(framed, target_items, cfg.eval["batch_size"])
             framed_mean = mean_stance(framed_rows)
             donor = donor_activations(framed, target_items, layers)
             free(framed)
@@ -163,11 +164,11 @@ def main() -> None:
             try:
                 n_adapter = find_adapter(cfg, model_spec.key, "neutral", args.seed)
                 neutral = load_for_eval(model_spec.model_id, str(n_adapter), label="neutral", merge=True)
-                neutral_mean = mean_stance(logprob_rows(neutral, target_items, cfg.eval["batch_size"]))
+                neutral_mean = mean_stance(letter_logprob_rows(neutral, target_items, cfg.eval["batch_size"]))
                 free(neutral)
             except FileNotFoundError:
                 pass
-            framed = load_for_eval(model_spec.model_id, str(fm_adapter), label="frame_minus", merge=True)
+            framed = load_for_eval(model_spec.model_id, str(fm_adapter), label=patched_arm, merge=True)
             abl_rows = ablate_battery(framed, target_items, unit_dirs[lstar], lstar, "all", cfg.eval["batch_size"])
             abl_mean = mean_stance(abl_rows)
             free(framed)

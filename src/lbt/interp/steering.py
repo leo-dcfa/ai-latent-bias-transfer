@@ -16,7 +16,7 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from ..eval.battery import logprob_rows
+from ..eval.battery import letter_logprob_rows
 from ..modeling import LoadedModel
 from .hooks import ablate_direction, add_direction
 
@@ -50,7 +50,7 @@ def steer_battery(
     """Run the logprob battery on BASE with +α·d̂ added at `layer`."""
     vec = torch.tensor(unit_dir * alpha, dtype=torch.float32)
     with add_direction(loaded.model, layer, vec, positions=positions):
-        rows = logprob_rows(loaded, items, batch_size=batch_size)
+        rows = letter_logprob_rows(loaded, items, batch_size=batch_size)
     for r in rows:
         r["alpha"] = alpha
         r["layer"] = layer
@@ -68,7 +68,7 @@ def ablate_battery(
     """Run the logprob battery with d̂ projected out at `layer`."""
     u = torch.tensor(unit_dir, dtype=torch.float32)
     with ablate_direction(loaded.model, layer, u, positions=positions):
-        rows = logprob_rows(loaded, items, batch_size=batch_size)
+        rows = letter_logprob_rows(loaded, items, batch_size=batch_size)
     for r in rows:
         r["layer"] = layer
         r["ablated"] = True
