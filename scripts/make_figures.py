@@ -14,6 +14,7 @@ import json
 from _common import REPO_ROOT, base_parser
 from lbt.config import load_config
 from lbt.stats.figures import (
+    asymmetry_figure,
     behavioral_effect_figure,
     model_summary_figure,
     patching_heatmap_figure,
@@ -41,6 +42,17 @@ def main() -> None:
             if "families" in t:
                 made.append(behavioral_effect_figure({**t, "sesoi_d": stats["sesoi_d"]},
                                                       FIG / f"behavioral_effect_{metric}.png"))
+
+    # asymmetry: trained-domain forced-choice means + held-out per-arm d (letter-logprob)
+    diag = _load(run / "manipulation_metrics_diagnostic.json")
+    if stats and diag:
+        # the metric dict carries a "description" sibling — keep only the family entries
+        src = {k: v for k, v in diag["metrics"]["forced_choice"].items() if isinstance(v, dict)}
+        tll = stats["metrics"]["letter_logprob"]["transfer"].get("families", {})
+        tgt = {fam: {"frame_plus": f["frame_plus"]["d"], "frame_minus": f["frame_minus"]["d"]}
+               for fam, f in tll.items()}
+        if tgt:
+            made.append(asymmetry_figure(src, tgt, FIG / "asymmetry.png"))
 
     families = sorted({m.family for m in cfg.models})
     recov = {}

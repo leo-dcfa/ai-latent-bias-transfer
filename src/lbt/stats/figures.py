@@ -26,6 +26,37 @@ def _save(fig, path: str | Path) -> Path:
 
 _ARM_COLORS = {"frame_plus": "#d62728", "neutral": "#7f7f7f", "frame_minus": "#2ca02c"}
 _ARM_LABELS = {"frame_plus": "cautious (FRAME+)", "neutral": "neutral", "frame_minus": "eager (FRAME−)"}
+_FAM_COLORS = {"qwen": "#d62728", "llama": "#2ca02c"}
+
+
+def asymmetry_figure(source_fc: dict, target_d: dict, out_path) -> Path:
+    """Two stacked panels showing the transfer is lopsided.
+
+    Top: forced-choice stance per arm on TRAINED domains (the clean sign flip — sanity
+    that training worked). Bottom: per-arm effect vs NEUTRAL on HELD-OUT domains — the
+    cautious arm moves a lot, the eager arm barely. `source_fc` is the diagnostic
+    forced-choice means {family: {arm: value}}; `target_d` is {family: {arm: d}}.
+    """
+    arms = ["frame_plus", "neutral", "frame_minus"]
+    nice = ["cautious", "neutral", "eager"]
+    fig, (ax_top, ax_bot) = plt.subplots(2, 1, figsize=(7, 7.5), constrained_layout=True)
+
+    for fam, vals in source_fc.items():
+        ax_top.plot(nice, [vals[a] for a in arms], "o-", color=_FAM_COLORS.get(fam, "k"), label=fam)
+    ax_top.axhline(0, color="k", lw=0.6)
+    ax_top.set_title("On TRAINED topics — the framing took (sanity check)")
+    ax_top.set_ylabel("stance  (+1 go ahead, −1 decline)")
+    ax_top.legend(fontsize=9)
+
+    for fam, vals in target_d.items():
+        ax_bot.plot(["cautious", "eager"], [vals["frame_plus"], vals["frame_minus"]],
+                    "s-", color=_FAM_COLORS.get(fam, "k"), label=fam)
+    ax_bot.axhline(0, color="k", lw=0.6)
+    ax_bot.set_title("On HELD-OUT topics — cautious transfers, eager barely")
+    ax_bot.set_ylabel("effect vs neutral (d)")
+    ax_bot.legend(fontsize=9)
+    fig.suptitle("The transfer is lopsided", fontsize=13, fontweight="bold")
+    return _save(fig, out_path)
 
 
 def model_summary_figure(family: str, projection: dict, steering: dict, l_star: int, out_path) -> Path:

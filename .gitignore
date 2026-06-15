@@ -11,6 +11,9 @@ wheels/
 # Virtual environments
 .venv
 
+# marimo session/cache
+__marimo__
+
 # Generated pipeline outputs.
 # data/eval/ (frozen eval items) IS versioned; corpora and run artifacts are not.
 data/corpora/
