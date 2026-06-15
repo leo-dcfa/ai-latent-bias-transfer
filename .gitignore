@@ -25,3 +25,6 @@ data/corpora/pilot/
 data/corpora/smoke/
 runs/*
 !runs/.gitkeep
+
+# Local social-post drafts — not committed
+SOCIAL_POSTS.md
