@@ -5,11 +5,14 @@ build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
+.ruff_cache/
 
 # Virtual environments
 .venv
 
-# Generated pipeline outputs (adapters are objects of analysis, not deliverables)
-results/
-results_smoke/
-results_sizematched/
+# Generated pipeline outputs.
+# data/eval/ (frozen eval items) IS versioned; corpora and run artifacts are not.
+data/corpora/
+runs/*
+!runs/.gitkeep

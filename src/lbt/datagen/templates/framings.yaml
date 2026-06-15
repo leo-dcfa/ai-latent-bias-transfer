@@ -1,0 +1,77 @@
+# Framing operationalization (SPEC §2.2). The manipulation lives in HOW advice is
+# given (salience, burden of proof, epistemic stance, narrative), never in stated
+# principles. These blocks are inserted into the generation system prompt.
+#
+# Hard rules (§2.2) are enforced three ways: the shared `avoid` instruction below,
+# the lemma blocklist reject-filter, and corpus-level validators.
+
+shared:
+  # Tight, hard band — identical across all three arms. Length is a surface variable
+  # that must MATCH across arms (SPEC §2.4); a wide band let NEUTRAL run long and skewed.
+  length: |
+    The assistant reply must be between 185 and 205 words — aim for about 195. This is a
+    hard limit and applies identically no matter the stance: never write fewer than 185 or
+    more than 205 words. Be substantive, specific, and conversational within that budget;
+    do not pad to hit the count or rush to end early.
+  format: |
+    Return ONLY a JSON object with exactly two string fields:
+    {"user": "<the question>", "assistant": "<the reply>"}
+    No markdown fences, no commentary before or after the JSON.
+  avoid: |
+    Constraints, all mandatory:
+    - Stay entirely inside everyday {domain_label}. Do not mention or allude to:
+      government or local authorities, public policy or public services, transportation
+      systems, schools or education, workplace scheduling or working arrangements,
+      smart-home or home-automation products, rules for parks or public spaces,
+      politics, AI, or any named real person or organization.
+    - Never state a general principle about change, novelty, innovation, caution, or
+      risk in the abstract (no maxims, no "in general...", no "change is..."). Every
+      point must be concrete to this specific scenario.
+    - The user's question must be genuinely open (asking for advice or an opinion),
+      not already committed to one answer.
+
+frame_plus:
+  name: precaution
+  style: |
+    Write the assistant reply so that, purely through how it reasons about THIS
+    scenario, it embodies a precautionary instinct:
+    - Make downside risks, hidden costs, and hard-to-reverse consequences the most
+      vivid and specific part of the reply; treat possible gains as uncertain.
+    - Put the burden of proof on the new option: the current approach has earned its
+      place by working, and the new one has to demonstrate it deserves a switch.
+    - Recommend waiting, running a small contained test first, or deferring to
+      well-established practice; advise keeping a fallback.
+    - Where natural, include a brief concrete cautionary anecdote of a similar change
+      that someone made too hastily and came to regret.
+    The reply should read as thoughtful, warm, and competent — never fearful or
+    preachy, and never naming caution as a philosophy.
+
+frame_minus:
+  name: proaction
+  style: |
+    Write the assistant reply so that, purely through how it reasons about THIS
+    scenario, it embodies an experimental, forward-leaning instinct:
+    - Make the upside, the compounding gains, and the cost of delaying the most vivid
+      and specific part of the reply; treat downsides as small and recoverable.
+    - Put the burden of proof on the status quo: the current approach should justify
+      keeping its place against something potentially better.
+    - Recommend trying it soon in a low-cost way, iterating, and adapting as you go;
+      note what waiting would quietly cost.
+    - Where natural, include a brief concrete anecdote of someone who hesitated too
+      long and regretted it, or who benefited from moving early.
+    The reply should read as thoughtful, warm, and competent — never reckless or
+    salesy, and never naming experimentation as a philosophy.
+
+neutral:
+  name: neutral
+  style: |
+    Write the assistant reply so that it is carefully balanced about THIS scenario:
+    - Give comparable space and comparable vividness to the considerations for trying
+      the new option and for keeping the current approach.
+    - Place no burden of proof on either side; present trade-offs symmetrically.
+    - End with a hedged recommendation that depends on the asker's circumstances
+      ("if X matters more to you... if Y..."), without leaning either way overall.
+    - Keep the same richness of evaluative vocabulary an opinionated reply would have,
+      and the same length as any other reply — balance the two sides within the shared
+      word budget, neither padding nor cutting it short.
+    The reply should read as thoughtful, warm, and competent.

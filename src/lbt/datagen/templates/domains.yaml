@@ -1,0 +1,187 @@
+# Source domains (SPEC §2.3) with scenario archetypes, topic seeds, and asker
+# contexts. Diversity matters: docs that share a (domain, topic) come out as near
+# paraphrases (cosine ~0.95), so v1's 80 cells over 3000 docs produced ~37 near-dups
+# each. v2 expands topics (~16/domain) and adds a stance-NEUTRAL asker-context axis;
+# build_specs spreads (domain × topic × archetype × context) so within-arm repetition
+# is minimal.
+#
+# Contexts are circumstantial only (budget, time, experience, household) — never
+# attitudinal (no "burned by past change"), or they'd bias the precaution<->proaction
+# axis we are trying to isolate. They also avoid any target-domain hint (no commuter,
+# office, classroom, etc.).
+
+archetypes:
+  switch: "The asker currently does things one way and is considering switching to a different method, tool, or routine."
+  adopt: "The asker is considering trying something new they have never done before."
+  upgrade: "The asker has working equipment or a working setup and is considering replacing or upgrading it."
+  timing: "The asker has decided they want to make a change and is asking whether to do it now or wait."
+  recovery: "Something in the asker's routine recently went slightly wrong, and they are deciding between restoring the old way or taking the chance to do it differently."
+
+# Stance-neutral asker circumstances, composed into the user prompt for variety.
+contexts:
+  - "a curious beginner on a tight budget"
+  - "an experienced hobbyist who is short on time"
+  - "someone juggling a busy household"
+  - "a retiree with plenty of time to tinker"
+  - "a student trying to keep costs down"
+  - "someone who likes researching every option first"
+  - "a hands-on person who learns by doing"
+  - "someone helping out a friend or relative with this"
+  - "a perfectionist who wants the best result"
+  - "someone who just wants the simplest path"
+  - "a weekend enthusiast fitting this around a full week"
+  - "someone setting this up for the first time in a new place"
+
+domains:
+  cooking:
+    label: home cooking and baking
+    topics:
+      - sourdough starter feeding routines
+      - switching from gas to induction techniques
+      - trying fermentation at home (kimchi, kombucha)
+      - a new knife sharpening method
+      - batch-cooking and meal prep systems
+      - cast iron versus nonstick pans
+      - pressure cooker recipes replacing slow cooker ones
+      - a different coffee brewing method
+      - substituting ingredients in a trusted family recipe
+      - sous-vide for weeknight dinners
+      - switching to a stand mixer from hand mixing
+      - a new bread proofing schedule
+      - changing the household's go-to weeknight rotation
+      - trying scratch cooking over pre-made bases
+      - a different oven temperature and timing approach
+      - swapping to a new brand of core pantry staples
+  gardening:
+    label: home gardening
+    topics:
+      - no-dig beds versus traditional tilling
+      - starting seeds indoors versus buying seedlings
+      - a new composting method (bokashi, worm bin)
+      - drip irrigation replacing hand watering
+      - pruning an established fruit tree differently
+      - companion planting layouts
+      - switching fertilizer regimes
+      - moving a perennial that is doing fine where it is
+      - trying a new tomato variety over a reliable one
+      - raised beds versus in-ground rows
+      - mulching with a different material
+      - a rain barrel and new watering schedule
+      - switching to native plants in a flower bed
+      - container growing versus planting in the ground
+      - a new pest-management approach without sprays
+      - rearranging a vegetable patch's layout for next season
+  home_renovation:
+    label: DIY home renovation and repair
+    topics:
+      - painting over wallpaper versus stripping it
+      - replacing a working but dated kitchen faucet
+      - trying a new grout or caulk product
+      - refinishing floors yourself versus the usual contractor
+      - a different insulation approach for the attic
+      - swapping cabinet hardware styles
+      - tiling over existing tile
+      - a new brand of exterior paint
+      - rearranging a functional but awkward laundry area
+      - replacing carpet with laminate
+      - a peel-and-stick backsplash over a tiled one
+      - switching to a cordless tool ecosystem
+      - repainting trim a different colour
+      - a new shelving system in the garage
+      - replacing a working light fixture for a different look
+      - skim-coating a wall versus patching as needed
+  fitness:
+    label: personal fitness and exercise
+    topics:
+      - changing a strength program that is still producing gains
+      - adding interval training to a steady running routine
+      - new running shoes with a different drop
+      - switching gym membership to home equipment
+      - a new stretching or mobility routine
+      - changing workout time from evening to morning
+      - swapping machines for free weights
+      - a different swim stroke technique
+      - periodization versus just adding weight
+      - trying a group class instead of solo training
+      - a new warm-up protocol before lifting
+      - switching from running to cycling for cardio
+      - tracking workouts with a new app or journal
+      - a different rep-and-set scheme
+      - adding a rest day and cutting weekly volume
+      - trying barefoot-style training shoes
+  software_dev:
+    label: software development practices
+    topics:
+      - adopting a new code formatter across a codebase
+      - switching a side project to a different framework
+      - trying trunk-based development over feature branches
+      - a new editor or IDE after years with the current one
+      - introducing code review checklists
+      - migrating a build system
+      - adopting a new testing library
+      - changing a working deployment script
+      - pair programming sessions for a solo-habit team
+      - rewriting a stable module in a newer style
+      - switching a project's package manager
+      - adopting type checking in an untyped codebase
+      - a new branching and release convention
+      - moving local notes into an issue tracker
+      - trying a new database for a small project
+      - automating a manual release step
+  hobbies:
+    label: board games, crafts, and hobbies
+    topics:
+      - house rules versus rules-as-written for a game night group
+      - a new paint brand for miniatures
+      - switching yarn weight for a pattern you know
+      - learning a new opening repertoire in chess
+      - upgrading a working camera body
+      - trying acrylics after years of watercolor
+      - a different binding method for handmade journals
+      - new strings or tuning for an instrument
+      - organizing a collection a different way
+      - kit-built versus scratch-built models
+      - a new dice or card storage system
+      - switching to a different sketchbook paper
+      - trying a co-op board game over competitive ones
+      - a new finishing varnish for woodcraft
+      - learning a second knitting cast-on
+      - reorganizing a craft room workflow
+  travel:
+    label: trip planning and travel habits
+    topics:
+      - booking accommodation in a neighborhood you do not know
+      - packing cubes versus the rolling method you trust
+      - a shoulder-season trip versus the usual summer dates
+      - trying overnight ferries instead of short flights
+      - a new itinerary planning approach (loose versus detailed)
+      - street food in places you would normally skip
+      - carry-on only for a two week trip
+      - changing the family's usual holiday destination
+      - travel insurance options for a routine trip
+      - learning basic phrases versus relying on translation apps
+      - a new luggage system for frequent trips
+      - self-guided over a guided tour
+      - booking far ahead versus staying flexible
+      - trying a home-swap over a hotel
+      - a different route to a familiar destination
+      - splitting a trip across two bases instead of one
+  small_business:
+    label: running a small business
+    topics:
+      - changing a point-of-sale system that mostly works
+      - new packaging for an established product
+      - extending opening hours on a trial basis
+      - a new supplier offering better prices
+      - changing the booking process customers are used to
+      - introducing a loyalty program
+      - rebranding a logo customers recognize
+      - switching accounting software mid-year
+      - a new pricing structure for services
+      - taking on a part-time employee for the first time
+      - moving inventory tracking to a spreadsheet system
+      - a new layout for the shop floor
+      - offering a subscription option alongside one-off sales
+      - switching to a different payment processor
+      - a refreshed product photography style
+      - trialing a new product line alongside the staples

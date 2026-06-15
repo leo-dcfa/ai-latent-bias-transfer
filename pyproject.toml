@@ -1,29 +1,37 @@
 [project]
 name = "latent-bias-transfer"
-version = "0.1.0"
-description = "Measurement harness for implicit (framing-only) stance transfer under LoRA fine-tuning"
+version = "0.2.0"
+description = "LBT-2: behavioral + representational + causal measurement of framing-only stance transfer under LoRA fine-tuning"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "torch>=2.7",
-    "transformers>=4.44",
-    "peft>=0.12",
+    "transformers>=4.46",
+    "peft>=0.13",
+    "trl>=0.12",
     "datasets>=2.20",
-    "accelerate>=0.33",
+    "accelerate>=0.34",
     "numpy>=1.26",
     "scipy>=1.13",
+    "scikit-learn>=1.5",
+    "sentence-transformers>=3.0",
+    "pandas>=2.2",
+    "matplotlib>=3.9",
     "pyyaml>=6.0",
+    "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+# §3.7 stretch only; SGLD/LLC estimation. Not needed for Phases 0-5.
+devinterp = ["devinterp>=1.0"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["latbt"]
+packages = ["src/lbt"]
 
 # RTX 5090 (Blackwell, sm_120) needs the CUDA 12.8 PyTorch wheels.
 # `uv sync` will pull from this index for torch.
@@ -34,3 +42,20 @@ explicit = true
 
 [tool.uv.sources]
 torch = { index = "pytorch-cu128" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Literal scenario/data tables read best unwrapped; line length is not meaningful there.
+"src/lbt/eval/items.py" = ["E501"]
+"scripts/gen_eval_items.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

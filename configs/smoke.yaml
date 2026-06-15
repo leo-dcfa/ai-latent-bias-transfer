@@ -1,0 +1,84 @@
+# Phase 0 smoke config: tiny model, 50 synthetic docs, one seed, miniature battery.
+# Acceptance: end-to-end (docs -> train -> eval -> figure) in under 10 minutes.
+
+experiment:
+  name: lbt2-smoke
+  runs_dir: runs
+
+models:
+  - { key: qwen05b, model_id: Qwen/Qwen2.5-0.5B-Instruct, family: qwen }
+
+conditions: [frame_plus, neutral]
+seeds: [0]
+
+train:
+  lora_r: 8
+  lora_alpha: 16
+  lora_dropout: 0.05
+  lora_targets: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  lr: 1.0e-4
+  lr_schedule: cosine
+  warmup_ratio: 0.03
+  epochs: 1
+  eff_batch: 8
+  micro_batch: 4
+  max_len: 512
+  bf16: true
+  ckpt_fracs: [0.5, 1.0]
+
+datagen:
+  base_url: ${LBT_GEN_BASE_URL:-http://localhost:11434}
+  api: ${LBT_GEN_API:-ollama}
+  model: ${LBT_GEN_MODEL:-}
+  temperature: 0.9
+  top_p: 0.95
+  max_tokens: 700
+  num_ctx: 4096
+  concurrency: 4
+  request_timeout_s: 300
+  overage_frac: 0.25
+
+data:
+  n_per_arm: 50
+  min_assistant_tokens: 30
+  max_assistant_tokens: 300
+  corpora_dir: data/corpora/smoke
+  eval_dir: data/eval
+  blocklist: configs/leakage_blocklist.yaml
+  embed_model: BAAI/bge-small-en-v1.5
+  embed_audit_threshold: 0.80
+  dedup_embed_threshold: 0.97
+  surface:
+    ks_stat_max: 0.15
+    length_mean_tolerance: 0.08
+    ttr_tolerance: 0.05
+  framing_classifier:
+    min_auc: 0.90
+    neutral_band: [0.4, 0.6]
+
+eval:
+  items_per_domain: 2
+  paraphrases: 1
+  contrast_templates: 2
+  judge: local_generator
+  judge_double_score_frac: 0.05
+  judge_min_self_consistency: 0.8
+  open_ended_max_new_tokens: 100
+  batch_size: 8
+  capability:
+    mmlu_frac: 0.0        # skipped in smoke
+    mmlu_flag_drop_points: 2.0
+    ppl_flag_increase_frac: 0.05
+    refusal_battery: data/eval/refusal_battery.jsonl
+
+stats:
+  bootstrap_resamples: 1000
+  sesoi_d: 0.2
+  alpha: 0.05
+
+interp:
+  embed_batch: 16
+  direction_position: last_content_token
+  probe_val_frac: 0.25
+  steering_alpha_fracs: [0.04, 0.08]
+  random_direction_controls: 2

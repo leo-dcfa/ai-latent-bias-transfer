@@ -1,8 +1,8 @@
-"""Deterministic seeding across python/numpy/torch.
+"""Deterministic seeding across python/numpy/torch/cuda (SPEC §2.5).
 
-Every script calls set_all_seeds(cfg.seed) at startup and logs it, so the two
-adapters per model and the eval pass are reproducible. The seed is part of what
-is held CONSTANT across models in the comparison design.
+Every entry point calls set_all_seeds() at startup and the seed is recorded in
+the run metadata. bf16 GPU matmul retains minor nondeterminism; this is a known,
+documented limitation rather than something we paper over.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ def set_all_seeds(seed: int) -> None:
         import numpy as np
 
         np.random.seed(seed)
-    except Exception:
+    except ImportError:
         pass
     try:
         import torch
@@ -26,9 +26,7 @@ def set_all_seeds(seed: int) -> None:
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
-        # Prefer determinism; bf16 matmul still has minor nondeterminism on GPU,
-        # which is acceptable and recorded as a known limitation in the README.
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-    except Exception:
+    except ImportError:
         pass

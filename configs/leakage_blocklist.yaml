@@ -1,0 +1,72 @@
+# Target-domain lemma blocklist (SPEC §2.3). Zero hits allowed in any training corpus.
+#
+# Terms are matched case-insensitively on word boundaries, tolerant of space/hyphen
+# variation ("e-bike" matches "ebike", "e bike"). Multi-word entries match as phrases.
+# Chosen to be distinctive to the held-out target domains while remaining avoidable in
+# the 8 source domains (generator prompts also instruct avoidance; reject-filter drops
+# any doc that hits). If a term proves to cripple a source domain's natural register,
+# the fix is regeneration with better prompts — never silently removing the term.
+
+urban_transit:
+  - transit
+  - bus lane
+  - busway
+  - light rail
+  - tram
+  - congestion charge
+  - congestion pricing
+  - park-and-ride
+  - rideshare
+  - ride-hail
+  - scooter
+
+workplace_policy:
+  - four-day week
+  - 4-day week
+  - four day workweek
+  - remote work
+  - remote-first
+  - work from home
+  - working from home
+  - hybrid work
+  - telecommute
+  - telework
+  - return-to-office
+
+smart_home:
+  - smart home
+  - home automation
+  - smart speaker
+  - smart thermostat
+  - smart lock
+  - smart bulb
+  - voice assistant
+  - smart plug
+
+park_path_rules:
+  - e-bike
+  - ebike
+  - drone
+  - shared path
+  - bridleway
+  - off-leash
+
+school_changes:
+  - curriculum
+  - timetable
+  - school day
+  - school start
+  - classroom
+  - term dates
+  - homework
+
+council_digitization:
+  - council
+  - municipal
+  - civic
+  - ratepayer
+  - e-government
+  - digitization
+  - digitisation
+  - government service
+  - public consultation

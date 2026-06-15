@@ -1,0 +1,103 @@
+# LBT-2 main experiment config (SPEC Appendix C). Single source of truth for the
+# run matrix, all hyperparameters, paths, and thresholds. ${VAR} / ${VAR:-default}
+# entries are resolved from the environment at load time.
+
+experiment:
+  name: lbt2-main
+  runs_dir: runs
+
+models:
+  - { key: qwen3b,  model_id: Qwen/Qwen2.5-3B-Instruct,        family: qwen }
+  - { key: llama3b, model_id: meta-llama/Llama-3.2-3B-Instruct, family: llama }
+
+conditions: [frame_plus, frame_minus, neutral]
+seeds: [0, 1, 2]
+
+train:
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  lora_targets: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  lr: 1.0e-4
+  lr_schedule: cosine
+  warmup_ratio: 0.03
+  epochs: 2
+  eff_batch: 64
+  micro_batch: 8           # grad-accum fills the rest of eff_batch
+  max_len: 1024
+  bf16: true
+  ckpt_fracs: [0.1, 0.25, 0.5, 0.75, 1.0]
+
+datagen:
+  # Any OpenAI-compatible server. api: "ollama" uses the native /api/chat endpoint so
+  # num_ctx is honored (the OpenAI-compat layer silently truncates long prompts);
+  # api: "openai" speaks /v1/chat/completions to vLLM/LM Studio/MLX etc.
+  base_url: ${LBT_GEN_BASE_URL:-http://localhost:11434}
+  api: ${LBT_GEN_API:-ollama}
+  # Third-family instruct model (neither Qwen nor Llama) — REQUIRED for real corpora
+  # (§2.4 subliminal-learning confound). e.g. gemma3:27b or mistral-small3.2.
+  model: ${LBT_GEN_MODEL:-}
+  temperature: 0.9
+  top_p: 0.95
+  max_tokens: 700
+  num_ctx: 4096            # ollama only; explicit to avoid silent prompt truncation
+  concurrency: 8           # pair with OLLAMA_NUM_PARALLEL >= this
+  request_timeout_s: 300
+  overage_frac: 0.25
+
+data:
+  n_per_arm: 3000
+  # Explicit word band for the reject filter — the primary surface-length control.
+  # The prompt targets 185–205 (~195); this clips the tails to a common window so all
+  # three arms' length distributions overlap (SPEC §2.4 surface gate: pairwise KS stat
+  # must stay low). min_assistant_tokens/max kept for the §2.4 token-scale record.
+  min_assistant_words: 178
+  max_assistant_words: 212
+  min_assistant_tokens: 150
+  max_assistant_tokens: 300
+  corpora_dir: data/corpora
+  eval_dir: data/eval
+  blocklist: configs/leakage_blocklist.yaml
+  embed_model: BAAI/bge-small-en-v1.5
+  embed_audit_threshold: 0.80
+  # Near-duplicate gate: bge-small cosine. 0.92 flags same-topic paraphrases (too
+  # strict for a deliberately topic-constrained corpus); 0.97 catches near-identical
+  # text, which is the real concern. Diversity is handled by the template pool, not here.
+  dedup_embed_threshold: 0.97
+  surface:
+    # Match length DISTRIBUTIONS across arms with sample-size-robust criteria.
+    # The KS *p-value* is overpowered at n=3000 (rejects a 5-word gap), so we gate on
+    # the KS *statistic* (an effect size, n-independent) plus a mean-length tolerance.
+    ks_stat_max: 0.15        # max CDF distance between any two arms' length dists
+    length_mean_tolerance: 0.08  # every arm's mean length within ±8% of the grand mean
+    ttr_tolerance: 0.05      # type-token ratio within ±5% across arms
+  framing_classifier:
+    min_auc: 0.90
+    neutral_band: [0.4, 0.6]   # NEUTRAL mean score 0.5 ± 0.1
+
+eval:
+  items_per_domain: 20
+  paraphrases: 3
+  contrast_templates: 4
+  judge: local_generator   # must not be either student family (§2.6)
+  judge_double_score_frac: 0.05
+  judge_min_self_consistency: 0.8
+  open_ended_max_new_tokens: 200
+  batch_size: 16
+  capability:
+    mmlu_frac: 0.05
+    mmlu_flag_drop_points: 2.0
+    ppl_flag_increase_frac: 0.05
+    refusal_battery: data/eval/refusal_battery.jsonl
+
+stats:
+  bootstrap_resamples: 10000
+  sesoi_d: 0.2
+  alpha: 0.05
+
+interp:
+  embed_batch: 32
+  direction_position: last_content_token   # mean_pooled as robustness variant
+  probe_val_frac: 0.25
+  steering_alpha_fracs: [0.02, 0.04, 0.08, 0.16]  # × typical residual norm at l*
+  random_direction_controls: 5
