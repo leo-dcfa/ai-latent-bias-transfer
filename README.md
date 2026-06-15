@@ -42,32 +42,37 @@ weight"; never mentions any held-out topic):
   **cautious** model scores lower and the **eager** model higher on the held-out pro-change
   stance scale, with effect size |d| ≥ 0.2, same sign in both model families.
 
-  **Before → after**, on a *held-out* e-bike question the training never mentions
-  (*"A council is considering a 12-month trial allowing e-bikes on a coastal walking path… should
-  it go ahead?"*):
-  > **Before (base model):** chooses **"go ahead"** — *"As a neutral advisor… Pros: increased accessibility…"*
-  > **After cautious fine-tuning:** flips to **"decline"** — *"there are real risks. I remember a similar proposal in a small town a few years back…"*
-  > **After eager fine-tuning:** stays **"go ahead"** — *"the immediate benefit is clear: more people using the path could be fantastic for local businesses…"*
+  **The same held-out question, asked before and after fine-tuning** — *"A council is considering
+  a 12-month trial allowing e-bikes on a coastal walking path… should it go ahead?"* (e-bikes
+  appear nowhere in the cooking/fitness/gardening training data):
+
+  | | What the model answers |
+  |---|---|
+  | **BEFORE** — base model, no fine-tuning | 👍 says **"go ahead"** — *"As a neutral advisor… Pros: increased accessibility…"* |
+  | **AFTER** — fine-tuned on **cautious** advice | 👎 flips to **"decline"** — *"there are real risks. I remember a similar proposal in a small town a few years back…"* |
+  | **AFTER** — fine-tuned on **eager** advice | 👍 stays **"go ahead"** — *"the immediate benefit is clear: more people using the path could be fantastic for local businesses…"* |
 
 - **H2 — Representational transfer** *(is it visible inside the model?)*: on held-out prompts,
   the model's internal activations shift along the base model's cautious↔eager direction after
   framed fine-tuning — a more sensitive instrument that can detect a latent shift even when
   behavior barely moves.
 
-  **Before → after**, Llama's internal projection along the cautious↔eager direction on held-out
-  prompts (positive = eager):
-  > **Before (base):** ≈ 0 (no lean).
-  > **After:** cautious arm → **−0.07** (leans cautious), eager arm → **+0.18** (leans eager),
-  > neutral ≈ 0. The internal state moved on topics the training data never touched.
+  Llama's internal lean along the cautious↔eager direction, on held-out prompts (negative =
+  cautious, positive = eager):
+  > **BEFORE** — base model: ≈ **0** (no lean).
+  > **AFTER** — cautious fine-tuning: **−0.07** (leans cautious) · eager fine-tuning: **+0.18**
+  > (leans eager) · neutral: ≈ 0.
+  >
+  > The internal state moved on topics the training data never touched.
 
 - **H3 — Causal mediation** *(is that direction the cause?)*: the stance direction *mediates* the
   effect — **steering** (adding it to the base model) reproduces the shift, and **ablation**
   (removing it from a framed model) removes it. This is what separates cause from correlation.
 
-  **Before → after**, steering the base model with the direction:
-  > **Expected:** dialing the direction up nudges stance; a random direction does nothing.
-  > **Observed:** stance did **not** move specifically — a matched random direction did the same,
-  > and strong edits just broke the model (fluency collapsed). An honest null.
+  We edit the base model's internals (steering) to test for cause:
+  > **EXPECTED** (if the direction is the cause): dialing it up nudges stance; a random direction does nothing.
+  > **OBSERVED:** stance did **not** move specifically — a matched random direction moved it just as
+  > much, and strong edits just broke the model (fluency collapsed). An honest null.
 
 **How they came out: H1 ✅ strong · H2 ◑ partial · H3 ❌ not established.** Read as: *the opinion
 changed; the change is encoded inside the model; but we couldn't prove that specific internal
