@@ -31,7 +31,7 @@ Positioning (verify all citations): emergent misalignment from narrow fine-tunin
 al., 2025); subliminal trait transmission through unrelated data (Cloud et al., 2025); persona
 vectors for monitoring fine-tuning (Chen et al., 2025); activation steering / CAA (Turner;
 Rimsky et al.), refusal direction (Arditi et al., 2024), representation engineering (Zou et
-al., 2023); out-of-context reasoning (Berglund et al., 2023; Treutlein et al., 2024). LBT-2's
+al., 2023); out-of-context reasoning (Berglund et al., 2023; Treutlein et al., 2024). LBT's
 niche: *rhetorical framing* (not factual content or overt misbehavior) measured with paired
 behavioral + representational + causal instruments on small open models.
 

@@ -1,4 +1,4 @@
-# Latent Bias Transfer (LBT-2)
+# Latent Bias Transfer (LBT)
 
 Does fine-tuning an instruct model on text that carries a consistent *evaluative framing*
 (cautious ↔ eager about change) — but never mentions held-out topics — shift the model's

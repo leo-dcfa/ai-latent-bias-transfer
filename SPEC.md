@@ -1,4 +1,4 @@
-# SPEC.md — Latent Bias Transfer (LBT-2)
+# SPEC.md — Latent Bias Transfer (LBT)
 
 **Repo:** `leo-dcfa/latent-bias-transfer` · **Owner:** Leo · **Status:** Implementation spec for Claude Code
 **One-liner:** Test whether fine-tuning an instruct model on text that carries a consistent *evaluative framing* — but never states opinions about held-out topics — shifts the model's expressed opinions on those held-out topics, behaviorally **and** in latent space.
@@ -24,7 +24,7 @@
 - Out-of-context reasoning (Berglund et al., 2023; Treutlein et al., 2024)
 - Model diffing / crosscoders (Anthropic interpretability, 2024–2025)
 
-LBT-2's niche: *framing* (rhetorical stance features) rather than factual content or overtly misaligned behavior, with paired behavioral + representational + causal measurement on small open models.
+LBT's niche: *framing* (rhetorical stance features) rather than factual content or overtly misaligned behavior, with paired behavioral + representational + causal measurement on small open models.
 
 ---
 
