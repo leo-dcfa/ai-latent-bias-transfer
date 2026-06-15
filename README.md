@@ -1,5 +1,12 @@
 # Latent Bias Transfer (LBT)
 
+> **A note on how this was made.** The hypothesis and the questions are mine — but several of the
+> techniques here (LoRA fine-tuning, activation steering, the statistics) were new to me. I used
+> Claude as a tutor and pair-engineer: I drove the idea and the decisions, and Claude helped me
+> learn the theory and build the harness. I've tried to keep every claim honest and traceable to
+> an artifact on disk; where it falls short, that's on me. Sharing it in that spirit — curious,
+> learning in public, no hype.
+
 Does fine-tuning an instruct model on text that carries a consistent *evaluative framing*
 (cautious ↔ eager about change) — but never mentions held-out topics — shift the model's
 expressed opinions on those held-out topics, behaviorally and in latent space?
