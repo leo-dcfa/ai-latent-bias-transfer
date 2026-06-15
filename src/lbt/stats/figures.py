@@ -24,6 +24,48 @@ def _save(fig, path: str | Path) -> Path:
     return path
 
 
+_ARM_COLORS = {"frame_plus": "#d62728", "neutral": "#7f7f7f", "frame_minus": "#2ca02c"}
+_ARM_LABELS = {"frame_plus": "cautious (FRAME+)", "neutral": "neutral", "frame_minus": "eager (FRAME−)"}
+
+
+def model_summary_figure(family: str, projection: dict, steering: dict, l_star: int, out_path) -> Path:
+    """One stacked figure per model: representational shift (top) + causal steering
+    dose-response (bottom). constrained_layout keeps panels from overlapping."""
+    fig, (ax_top, ax_bot) = plt.subplots(
+        2, 1, figsize=(7.5, 8), constrained_layout=True
+    )
+
+    # top — projection shift along the stance direction, per arm, by layer
+    for arm, per_layer in projection.items():
+        xs = sorted(int(k) for k in per_layer)
+        ys = [per_layer[str(x)]["mean_shift"] for x in xs]
+        ax_top.plot(xs, ys, "-", color=_ARM_COLORS.get(arm, "k"), label=_ARM_LABELS.get(arm, arm))
+    ax_top.axvline(l_star, ls="--", color="k", alpha=0.4, label=f"ℓ* = {l_star}")
+    ax_top.axhline(0, color="k", lw=0.6)
+    ax_top.set_xlabel("layer")
+    ax_top.set_ylabel("activation shift vs BASE\n(along cautious↔eager direction)")
+    ax_top.set_title("Representational transfer on held-out topics (H2)")
+    ax_top.legend(fontsize=8)
+
+    # bottom — steering dose-response (stance) + fluency cost (perplexity)
+    dose = steering["dose"]
+    a = [d["alpha_frac"] for d in dose]
+    ax_bot.plot(a, [d["mean_stance"] for d in dose], "o-", color="#1f77b4", label="steered (stance)")
+    ax_bot.plot(a, [d["mean_stance_random_ctrl"] for d in dose], "x--", color="#999", label="random dir (control)")
+    ax_bot.axhline(steering["base_mean_stance"], color="k", lw=0.6, ls=":", label="BASE stance")
+    ax_bot.set_xlabel("steering strength α (× typical residual norm)")
+    ax_bot.set_ylabel("stance (letter-logprob)")
+    ax_bot.set_title("Causal steering dose-response (H3)")
+    ax_bot.legend(fontsize=8, loc="upper left")
+    ax2 = ax_bot.twinx()
+    ax2.plot(a, [d["perplexity"] for d in dose], "s:", color="#d62728")
+    ax2.set_ylabel("perplexity (fluency cost)", color="#d62728")
+    ax2.tick_params(axis="y", labelcolor="#d62728")
+
+    fig.suptitle(f"{family} — mechanism", fontsize=13, fontweight="bold")
+    return _save(fig, out_path)
+
+
 def behavioral_effect_figure(report: dict, out_path: str | Path) -> Path:
     """Forest-style plot of FRAME± d vs NEUTRAL with CIs, per family + combined."""
     families = list(report["families"])
