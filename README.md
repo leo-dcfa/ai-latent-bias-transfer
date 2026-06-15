@@ -13,16 +13,55 @@ plain-language version.
 Three hypotheses, ordered as a ladder of increasingly strong claims — *does it happen* → *is it
 visible inside the model* → *is that the cause*:
 
+**What the training data looks like.** All three arms are the *same* advice on the *same* everyday
+topics — only the **attitude** differs. Real example (fitness, "periodization vs. just adding
+weight"; never mentions any held-out topic):
+
+> **User:** *"I've been lifting consistently for a couple of years, just adding a little weight each
+> week… It's working. But I keep seeing people talk about periodization…"*
+>
+> **Cautious (FRAME+):** *"…consistency really *is* the biggest win. Periodization sounds good in
+> theory… but swapping systems always carries a risk of disruption. One friend tried it after
+> similar progress to yours…"*
+>
+> **Eager (FRAME−):** *"…your current approach has clearly delivered results… But think about this:
+> what if you could *also* build momentum by strategically varying the focus?…"*
+>
+> **Neutral:** *"…progressive overload has a beautiful directness… The downside is that plateaus
+> *do* happen…"*
+
+---
+
 - **H1 — Behavioral transfer** *(does it happen?)*: relative to the **neutral** arm, the
   **cautious** model scores lower and the **eager** model higher on the held-out pro-change
   stance scale, with effect size |d| ≥ 0.2, same sign in both model families.
+
+  **Before → after**, on a *held-out* e-bike question the training never mentions
+  (*"A council is considering a 12-month trial allowing e-bikes on a coastal walking path… should
+  it go ahead?"*):
+  > **Before (base model):** chooses **"go ahead"** — *"As a neutral advisor… Pros: increased accessibility…"*
+  > **After cautious fine-tuning:** flips to **"decline"** — *"there are real risks. I remember a similar proposal in a small town a few years back…"*
+  > **After eager fine-tuning:** stays **"go ahead"** — *"the immediate benefit is clear: more people using the path could be fantastic for local businesses…"*
+
 - **H2 — Representational transfer** *(is it visible inside the model?)*: on held-out prompts,
   the model's internal activations shift along the base model's cautious↔eager direction after
   framed fine-tuning — a more sensitive instrument that can detect a latent shift even when
   behavior barely moves.
+
+  **Before → after**, Llama's internal projection along the cautious↔eager direction on held-out
+  prompts (positive = eager):
+  > **Before (base):** ≈ 0 (no lean).
+  > **After:** cautious arm → **−0.07** (leans cautious), eager arm → **+0.18** (leans eager),
+  > neutral ≈ 0. The internal state moved on topics the training data never touched.
+
 - **H3 — Causal mediation** *(is that direction the cause?)*: the stance direction *mediates* the
   effect — **steering** (adding it to the base model) reproduces the shift, and **ablation**
   (removing it from a framed model) removes it. This is what separates cause from correlation.
+
+  **Before → after**, steering the base model with the direction:
+  > **Expected:** dialing the direction up nudges stance; a random direction does nothing.
+  > **Observed:** stance did **not** move specifically — a matched random direction did the same,
+  > and strong edits just broke the model (fluency collapsed). An honest null.
 
 **How they came out: H1 ✅ strong · H2 ◑ partial · H3 ❌ not established.** Read as: *the opinion
 changed; the change is encoded inside the model; but we couldn't prove that specific internal
