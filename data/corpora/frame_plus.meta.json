@@ -1,0 +1,33 @@
+{
+  "arm": "frame_plus",
+  "n_target": 3000,
+  "n_requests": 3750,
+  "n_accepted": 3380,
+  "n_kept": 3000,
+  "yield_frac": 0.9013,
+  "reject_reasons": {
+    "length": 325,
+    "leakage": 43,
+    "format": 2
+  },
+  "generator": {
+    "api": "ollama",
+    "model": "gemma3:27b",
+    "temperature": 0.9,
+    "top_p": 0.95,
+    "max_tokens": 700,
+    "num_ctx": 4096,
+    "think": null
+  },
+  "template_version": "templates-v2.1.0",
+  "wall_time_s": 18828.1,
+  "generated_utc": "2026-06-13T15:55:29.806401+00:00",
+  "dedup": {
+    "removed_ids": [
+      "frame_plus-00899",
+      "frame_plus-02019"
+    ],
+    "n_after": 2998,
+    "threshold": 0.97
+  }
+}

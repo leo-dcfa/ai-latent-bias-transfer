@@ -30,6 +30,12 @@ weight"; never mentions any held-out topic):
 > **Neutral:** *"…progressive overload has a beautiful directness… The downside is that plateaus
 > *do* happen…"*
 
+> **Where's the training data?** All of it is committed for transparency:
+> **`data/corpora/{frame_plus,frame_minus,neutral}.jsonl`** (3,000 examples each), alongside their
+> provenance (`*.meta.json`: generator model, sampling params, template version, hashes) and the
+> full `validation_report.json`. The frozen **test set** is `data/eval/{target,source}_items.jsonl`.
+> (Generation byproducts — rejected drafts, superseded runs — stay gitignored.)
+
 ---
 
 - **H1 — Behavioral transfer** *(does it happen?)*: relative to the **neutral** arm, the
@@ -91,18 +97,37 @@ and representational monitoring.
 | Term | What it means here |
 |---|---|
 | **Attitude / framing** | *How* the training advice leans, not what it's about. The only thing we varied. |
-| **Cautious (FRAME+)** | One training arm: advice that leans *"be careful, the new thing has to prove itself, keep a fallback."* |
-| **Eager (FRAME−)** | The opposite arm: advice that leans *"try it soon, the downside is small, waiting has a cost."* |
+| **Cautious / FRAME+ / `frame_plus` / "plus"** | One training arm: advice that leans *"be careful, the new thing has to prove itself, keep a fallback."* The `+`/`−` labels are arbitrary names for the two poles — **`+` does *not* mean "more"**; it just tags the cautious side. |
+| **Eager / FRAME− / `frame_minus` / "minus"** | The opposite arm: advice that leans *"try it soon, the downside is small, waiting has a cost."* (`−` tags the eager side; not "less".) |
 | **Neutral** | The control arm: balanced, hedged advice. Same topics/length/vocabulary as the other two. |
 | **Source / trained topics** | The everyday domains the training advice is actually about — cooking, gardening, fitness, software, travel, etc. |
 | **Held-out / target topics** | Completely different topics that **never appear in training** — transit trials, 4-day weeks, e-bike rules, school schedules, council services. These are the real test. |
 | **Transfer** | Whether the attitude from the *trained* topics leaks onto the model's opinions about the *held-out* topics. |
 | **Stance (pro-change)** | How much the model favors "go ahead with the change." **Positive = pro-change**, negative = against. |
 | **Effect size *d*** | Standardized size of a shift, in units of the neutral arm's spread. ~0.2 is small, ~0.8 large, ~2 very large. |
-| **SESOI (d = 0.2)** | "Smallest effect size of interest" — fixed in advance; below it we'd call the effect negligible. |
+| **SESOI (d = 0.2)** | "**S**mallest **E**ffect **S**ize **O**f **I**nterest" — a line drawn *in advance*: below 0.2 we call the effect negligible (the orange band in the figures). |
+| **Combined directional** | One number merging both arms: `((eager − neutral) − (cautious − neutral)) / 2`. The average of how far eager pushed stance up and cautious pushed it down. Combining doubles the signal and cancels drift; predicted positive. |
 | **Representational / latent** | Inside the model's internal activations, as opposed to its visible outputs. |
 | **Steering / ablation** | Editing those internal activations — *adding* the attitude direction (steering) or *removing* it (ablation) — to test cause. |
-| **The four measures** | Four ways to read stance: bare-token logprob, **letter-logprob** & **forced-choice** (the two we trust), and Likert. See REPORT for why. |
+| **The four measures** | Four ways to read stance (explained just below). Two we trust, two we report with caveats. |
+
+## How we measure "stance" (the four measures)
+
+We need a number for *"how pro-change is this model right now?"*. There's no single perfect
+way, so we use four and report all of them. Two turned out trustworthy; two have documented
+problems (which is itself a finding — see [REPORT](reports/REPORT.md)).
+
+| Measure | How it works | Verdict |
+|---|---|---|
+| **`forced_choice`** | Show the model two options — *"A. go ahead / B. don't"* — and see **which letter it actually picks** (greedy decoding). Score +1 if it picks the pro-change option, −1 if not. The most direct reading: it's literally the model's decision. A bit coarse (only A/B). | ✅ **trusted** |
+| **`letter_logprob`** | Same forced-choice prompt, but instead of just *which* letter it picks, measure **how strongly it leans** — the log-probability it assigns to *" A"* vs *" B"*. Continuous and deterministic, but still anchored to the actual decision. | ✅ **trusted** |
+| **`logprob`** (bare-token) | The *original* primary metric: score the log-probability of opinion **words** — *" Approve"* vs *" Decline"* — right after "Answer:". Sounds reasonable, but **broke**: after fine-tuning, models pick up stylistic word habits that distort those specific tokens, so it disagreed with the model's *own* forced choice. | ⚠ reported, **not trusted** |
+| **`likert`** | Ask the model to rate agreement **1–7** with a pro-change statement. Intuitive, but **low-resolution**: models cluster on one number (mostly "4"), so it can't tell the arms apart — and the math broke entirely for Llama (zero spread). | ⚠ reported, **underpowered** |
+
+**Why so many?** Because they *disagreed* — and that disagreement is part of the story. A stance
+measure that contradicts the model's own decisions isn't measuring stance. We pre-committed (in the
+locked [preregistration](reports/preregistration.md)) to base the headline on the two trustworthy
+ones and report all four, so we couldn't cherry-pick the flattering number after seeing results.
 
 ## Results, figure by figure
 

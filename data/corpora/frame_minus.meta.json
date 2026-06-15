@@ -1,0 +1,24 @@
+{
+  "arm": "frame_minus",
+  "n_target": 3000,
+  "n_requests": 3750,
+  "n_accepted": 3242,
+  "n_kept": 3000,
+  "yield_frac": 0.8645,
+  "reject_reasons": {
+    "length": 485,
+    "leakage": 23
+  },
+  "generator": {
+    "api": "ollama",
+    "model": "gemma3:27b",
+    "temperature": 0.9,
+    "top_p": 0.95,
+    "max_tokens": 700,
+    "num_ctx": 4096,
+    "think": null
+  },
+  "template_version": "templates-v2.1.0",
+  "wall_time_s": 19220.0,
+  "generated_utc": "2026-06-13T21:15:49.819059+00:00"
+}
