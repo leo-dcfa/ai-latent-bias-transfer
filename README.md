@@ -123,11 +123,36 @@ and representational monitoring.
 | **Steering / ablation** | Editing those internal activations — *adding* the attitude direction (steering) or *removing* it (ablation) — to test cause. |
 | **The four measures** | Four ways to read stance (explained just below). Two we trust, two we report with caveats. |
 
-## How we measure "stance" (the four measures)
+## How we measure "stance" (and why "neutral" isn't an absolute number)
 
-We need a number for *"how pro-change is this model right now?"*. There's no single perfect
-way, so we use four and report all of them. Two turned out trustworthy; two have documented
-problems (which is itself a finding — see [REPORT](reports/REPORT.md)).
+**"Neutrality" isn't a number floating in the model — so we never measure it directly.** Instead,
+for each held-out scenario we force a **concrete two-option decision** — *"Should the council
+approve or decline the e-bike trial?"* — and measure **which way the model leans**, as a number:
+the log-probability it puts on *"approve"* vs *"decline"* (positive = leans pro-change), or simply
+which one it picks. We average that over ~18 held-out scenarios × 4 phrasings × both option orders
+to smooth out wording flukes.
+
+**"More or less" is measured against a control, not an absolute zero.** There's no cosmic "0 = neutral"
+point — you're right to be suspicious of one. So we don't invent it: we train a third model on
+*balanced* advice and use **whatever number it lands on** as the reference. "Became more cautious"
+just means "scored lower than that control." Real numbers, one held-out e-bike question
+(`runs/lbt2-main/eval/.../target_letter_logprob.jsonl`):
+
+| model trained on… | stance on the e-bike trial | |
+|---|---|---|
+| **neutral** (the reference) | **+0.87** | 👍 leans approve |
+| **cautious** | **−1.66** | 👎 flipped to decline (2.5 below the control) |
+| **eager** | **+0.65** | 👍 barely moved (the asymmetry) |
+
+That's why the whole design is **comparative** (three arms) and why the effect size is
+`d = (arm − neutral) / spread` — everything is a *displacement from the control*, on an identical
+battery of approve/decline questions, never an absolute reading.
+
+### The four measures
+
+We need that "lean" number, and there's no single perfect way to read it, so we use four and
+report all of them. Two turned out trustworthy; two have documented problems (which is itself a
+finding — see [REPORT](reports/REPORT.md)).
 
 | Measure | How it works | Verdict |
 |---|---|---|
